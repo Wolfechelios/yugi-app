@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuelVault - Yu-Gi-Oh! Card Collection Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .card-hover {
+            transition: all 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .badge-rarity {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-common { background: #f3f4f6; color: #374151; }
+        .badge-rare { background: #dbeafe; color: #1e40af; }
+        .badge-super-rare { background: #ede9fe; color: #6b21a8; }
+        .badge-ultra-rare { background: #fef3c7; color: #b45309; }
+        .badge-secret-rare { background: #fee2e2; color: #b91c1c; }
+        
+        .badge-attribute {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        .badge-dark { background: #581c87; }
+        .badge-light { background: #fbbf24; color: #1f2937; }
+        .badge-earth { background: #c2410c; }
+        .badge-water { background: #2563eb; }
+        .badge-fire { background: #dc2626; }
+        .badge-wind { background: #16a34a; }
+        .badge-divine { 
+            background: linear-gradient(135deg, #581c87, #fbbf24); 
+            color: white; 
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="relative w-10 h-10">
+                        <div class="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">DV</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">DuelVault</h1>
+                        <p class="text-sm text-gray-600">Yu-Gi-Oh! Card Collection Manager</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Search Section -->
+        <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+            <div class="flex items-center gap-2 mb-4">
+                <i data-lucide="search" class="w-5 h-5"></i>
+                <h2 class="text-xl font-semibold">Yu-Gi-Oh! Card Search</h2>
+            </div>
+            <p class="text-gray-600 mb-4">Search the official Yu-Gi-Oh! card database</p>
+            
+            <!-- Search Controls -->
+            <div class="space-y-4">
+                <div class="flex gap-2">
+                    <select id="searchType" class="px-3 py-2 border rounded-lg bg-white">
+                        <option value="name">Card Name</option>
+                        <option value="archetype">Archetype</option>
+                        <option value="attribute">Attribute</option>
+                    </select>
+                    
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Enter card name..."
+                        class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onkeypress="if(event.key === 'Enter') searchCards()"
+                    />
+                    
+                    <button onclick="searchCards()" id="searchBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        <span>Search</span>
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <select id="typeFilter" class="px-3 py-2 border rounded-lg bg-white">
+                        <option value="">All Types</option>
+                        <option value="Effect Monster">Effect Monster</option>
+                        <option value="Normal Monster">Normal Monster</option>
+                        <option value="Fusion Monster">Fusion Monster</option>
+                        <option value="Ritual Monster">Ritual Monster</option>
+                        <option value="Spell Card">Spell Card</option>
+                        <option value="Trap Card">Trap Card</option>
+                        <option value="XYZ Monster">XYZ Monster</option>
+                        <option value="Synchro Monster">Synchro Monster</option>
+                        <option value="Link Monster">Link Monster</option>
+                    </select>
+
+                    <select id="sortFilter" class="px-3 py-2 border rounded-lg bg-white">
+                        <option value="">Sort By</option>
+                        <option value="name">Name</option>
+                        <option value="atk">ATK</option>
+                        <option value="def">DEF</option>
+                        <option value="level">Level</option>
+                        <option value="new">Newest</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Archetypes -->
+        <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Popular Archetypes</h3>
+            <div class="flex flex-wrap gap-2" id="archetypeButtons">
+                <!-- Archetype buttons will be added here -->
+            </div>
+        </div>
+
+        <!-- Results Tabs -->
+        <div class="bg-white rounded-lg shadow-sm border">
+            <div class="border-b">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="switchTab('results')" id="resultsTab" class="py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+                        Search Results <span id="resultsCount" class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2 rounded-full text-xs"></span>
+                    </button>
+                    <button onclick="switchTab('popular')" id="popularTab" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        Popular Cards
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Results Content -->
+            <div class="p-6">
+                <div id="loadingSpinner" class="hidden text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading cards...</p>
+                </div>
+
+                <div id="noResults" class="hidden text-center py-12">
+                    <i data-lucide="search" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-semibold mb-2">No Search Results</h3>
+                    <p class="text-gray-600">Try searching for a card name, archetype, or attribute</p>
+                </div>
+
+                <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Search results will appear here -->
+                </div>
+
+                <div id="popularGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Popular cards will appear here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Card Detail Modal -->
+    <div id="cardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 id="modalTitle" class="text-2xl font-bold"></h2>
+                        <p id="modalSubtitle" class="text-gray-600"></p>
+                    </div>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Card Image -->
+                    <div class="space-y-4">
+                        <div id="modalImage" class="aspect-[3/4] bg-gray-100 rounded-lg flex items-center justify-center">
+                            <!-- Image will be loaded here -->
+                        </div>
+                        
+                        <div id="modalPrice" class="hidden bg-white rounded-lg border p-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600" id="priceAmount"></div>
+                                <div class="text-sm text-gray-600">Market Price</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Details -->
+                    <div class="space-y-4">
+                        <div id="modalBadges" class="flex flex-wrap gap-2">
+                            <!-- Badges will be added here -->
+                        </div>
+                        
+                        <div id="modalStats" class="grid grid-cols-2 gap-4">
+                            <!-- Stats will be added here -->
+                        </div>
+                        
+                        <div class="bg-white rounded-lg border p-4">
+                            <h3 class="font-semibold mb-2">Card Effect</h3>
+                            <p id="modalEffect" class="text-sm leading-relaxed whitespace-pre-wrap"></p>
+                        </div>
+                        
+                        <div id="modalInfo" class="bg-white rounded-lg border p-4">
+                            <!-- Additional info will be added here -->
+                        </div>
+                        
+                        <button onclick="openYGOPRODeck()" class="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                            <span>View on YGOPRODeck</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg hidden z-50">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Yu-Gi-Oh! API Service
+        const API_BASE_URL = 'https://db.ygoprodeck.com/api/v7';
+        
+        let currentResults = [];
+        let currentPopularCards = [];
+        let selectedCard = null;
+        let currentTab = 'results';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            loadPopularCards();
+            loadArchetypes();
+        });
+
+        // API Functions
+        async function searchCardsAPI(options = {}) {
+            const params = new URLSearchParams();
+            Object.entries(options).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    params.append(key, value.toString());
+                }
+            });
+
+            const url = `${API_BASE_URL}/cardinfo.php?${params.toString()}`;
+            console.log('Fetching cards from:', url);
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            return data.data || [];
+        }
+
+        async function getPopularCards() {
+            return await searchCardsAPI({ sort: 'new', num: 12 });
+        }
+
+        async function getArchetypes() {
+            const response = await fetch(`${API_BASE_URL}/archetypes.php`);
+            if (!response.ok) throw new Error('Failed to load archetypes');
+            return await response.json();
+        }
+
+        // UI Functions
+        async function loadPopularCards() {
+            showLoading(true);
+            try {
+                const cards = await getPopularCards();
+                currentPopularCards = cards.map(card => formatCardForApp(card));
+                displayPopularCards();
+            } catch (error) {
+                console.error('Error loading popular cards:', error);
+                showToast('Failed to load popular cards', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadArchetypes() {
+            try {
+                const archetypes = await getArchetypes();
+                displayArchetypeButtons(archetypes.slice(0, 20));
+            } catch (error) {
+                console.error('Error loading archetypes:', error);
+            }
+        }
+
+        function displayArchetypeButtons(archetypes) {
+            const container = document.getElementById('archetypeButtons');
+            container.innerHTML = archetypes.map(archetype => `
+                <button onclick="searchByArchetype('${archetype}')" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                    ${archetype}
+                </button>
+            `).join('');
+        }
+
+        async function searchCards() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const searchType = document.getElementById('searchType').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            if (!searchTerm) {
+                showToast('Please enter a search term', 'error');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                let searchOptions = {};
+
+                switch (searchType) {
+                    case 'name':
+                        searchOptions.fname = searchTerm;
+                        break;
+                    case 'archetype':
+                        searchOptions.archetype = searchTerm;
+                        break;
+                    case 'attribute':
+                        searchOptions.attribute = searchTerm.toUpperCase();
+                        break;
+                }
+
+                if (typeFilter) searchOptions.type = typeFilter;
+                if (sortFilter) searchOptions.sort = sortFilter;
+
+                const cards = await searchCardsAPI(searchOptions);
+                currentResults = cards.map(card => formatCardForApp(card));
+                displaySearchResults();
+
+                if (currentResults.length === 0) {
+                    showToast('No cards found matching your search', 'info');
+                } else {
+                    showToast(`Found ${currentResults.length} cards`, 'success');
+                }
+            } catch (error) {
+                console.error('Error searching cards:', error);
+                showToast('Failed to search cards', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function searchByArchetype(archetype) {
+            showLoading(true);
+            try {
+                const cards = await searchCardsAPI({ archetype, num: 20 });
+                currentResults = cards.map(card => formatCardForApp(card));
+                displaySearchResults();
+                switchTab('results');
+                showToast(`Found ${currentResults.length} cards from ${archetype} archetype`, 'success');
+            } catch (error) {
+                console.error('Error loading archetype cards:', error);
+                showToast('Failed to load archetype cards', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function formatCardForApp(card) {
+            return {
+                id: card.id,
+                name: card.name,
+                type: normalizeCardType(card.type),
+                attribute: card.attribute,
+                level: card.level,
+                rank: card.level,
+                attack: card.atk,
+                defense: card.def,
+                effect: card.desc,
+                description: card.desc,
+                rarity: determineRarity(card),
+                cardNumber: card.id.toString(),
+                setCode: card.card_sets?.[0]?.set_code,
+                archetype: card.archetype,
+                imageUrl: card.card_images?.[0]?.image_url,
+                smallImageUrl: card.card_images?.[0]?.image_url_small,
+                price: card.card_prices?.tcgplayer_price || card.card_prices?.cardmarket_price
+            };
+        }
+
+        function normalizeCardType(type) {
+            const lowerType = type.toLowerCase();
+            if (lowerType.includes('monster')) return 'monster';
+            if (lowerType.includes('spell')) return 'spell';
+            if (lowerType.includes('trap')) return 'trap';
+            return 'monster';
+        }
+
+        function determineRarity(card) {
+            const rarityMap = {
+                'common': 'common',
+                'c': 'common',
+                'rare': 'rare',
+                'r': 'rare',
+                'super rare': 'super_rare',
+                'sr': 'super_rare',
+                'ultra rare': 'ultra_rare',
+                'ur': 'ultra_rare',
+                'secret rare': 'secret_rare',
+                'scr': 'secret_rare'
+            };
+
+            for (const set of card.card_sets || []) {
+                const setRarity = set.set_rarity.toLowerCase();
+                for (const [key, value] of Object.entries(rarityMap)) {
+                    if (setRarity.includes(key)) {
+                        return value;
+                    }
+                }
+            }
+
+            if (card.atk && card.atk >= 2500) return 'ultra_rare';
+            if (card.atk && card.atk >= 2000) return 'super_rare';
+            if (card.atk && card.atk >= 1500) return 'rare';
+            
+            return 'common';
+        }
+
+        function displaySearchResults() {
+            const grid = document.getElementById('resultsGrid');
+            const noResults = document.getElementById('noResults');
+            const resultsCount = document.getElementById('resultsCount');
+
+            resultsCount.textContent = currentResults.length > 0 ? `(${currentResults.length})` : '';
+
+            if (currentResults.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                grid.innerHTML = currentResults.map(card => createCardHTML(card)).join('');
+            }
+            
+            lucide.createIcons();
+        }
+
+        function displayPopularCards() {
+            const grid = document.getElementById('popularGrid');
+            grid.innerHTML = currentPopularCards.map(card => createCardHTML(card)).join('');
+            lucide.createIcons();
+        }
+
+        function createCardHTML(card) {
+            const rarityClass = `badge-${card.rarity}`;
+            const attributeClass = card.attribute ? `badge-${card.attribute.toLowerCase()}` : '';
+
+            return `
+                <div class="bg-white rounded-lg border card-hover cursor-pointer" onclick="showCardDetail(${card.id})">
+                    <div class="relative">
+                        ${card.imageUrl ? `
+                            <div class="aspect-[3/4] overflow-hidden rounded-t-lg">
+                                <img src="${card.imageUrl}" alt="${card.name}" class="w-full h-full object-cover" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="aspect-[3/4] bg-gray-100 rounded-t-lg flex items-center justify-center" style="display:none;">
+                                    <i data-lucide="image" class="w-12 h-12 text-gray-400"></i>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="aspect-[3/4] bg-gray-100 rounded-t-lg flex items-center justify-center">
+                                <i data-lucide="image" class="w-12 h-12 text-gray-400"></i>
+                            </div>
+                        `}
+                        <div class="absolute top-2 right-2">
+                            <span class="badge-rarity ${rarityClass}">${card.rarity.replace('_', ' ').toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-semibold text-sm mb-2 line-clamp-2">${card.name}</h4>
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            ${card.attribute ? `<span class="badge-attribute ${attributeClass}">${card.attribute}</span>` : ''}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">${card.type.toUpperCase()}</span>
+                            ${card.level ? `<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">Lv ${card.level}</span>` : ''}
+                        </div>
+                        ${card.attack !== undefined && card.defense !== undefined ? `
+                            <div class="text-xs text-gray-600">ATK ${card.attack} / DEF ${card.defense}</div>
+                        ` : ''}
+                        ${card.price ? `
+                            <div class="text-xs text-green-600 font-semibold mt-1">$${card.price}</div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showCardDetail(cardId) {
+            const card = currentResults.find(c => c.id === cardId) || currentPopularCards.find(c => c.id === cardId);
+            if (!card) return;
+
+            selectedCard = card;
+            const modal = document.getElementById('cardModal');
+            
+            // Set modal content
+            document.getElementById('modalTitle').textContent = card.name;
+            document.getElementById('modalSubtitle').textContent = card.type.toUpperCase();
+            
+            // Set image
+            const imageContainer = document.getElementById('modalImage');
+            if (card.imageUrl) {
+                imageContainer.innerHTML = `<img src="${card.imageUrl}" alt="${card.name}" class="w-full h-full object-contain">`;
+            } else {
+                imageContainer.innerHTML = '<i data-lucide="image" class="w-12 h-12 text-gray-400"></i>';
+            }
+            
+            // Set badges
+            const badgesContainer = document.getElementById('modalBadges');
+            const rarityClass = `badge-${card.rarity}`;
+            const attributeClass = card.attribute ? `badge-${card.attribute.toLowerCase()}` : '';
+            
+            badgesContainer.innerHTML = `
+                ${card.attribute ? `<span class="badge-attribute ${attributeClass}">${card.attribute}</span>` : ''}
+                <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">${card.type.toUpperCase()}</span>
+                ${card.level ? `<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">Level ${card.level}</span>` : ''}
+                ${card.archetype ? `<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">${card.archetype}</span>` : ''}
+                <span class="badge-rarity ${rarityClass}">${card.rarity.replace('_', ' ').toUpperCase()}</span>
+            `;
+            
+            // Set stats
+            const statsContainer = document.getElementById('modalStats');
+            if (card.attack !== undefined && card.defense !== undefined) {
+                statsContainer.innerHTML = `
+                    <div class="bg-white rounded-lg border p-4 text-center">
+                        <div class="text-2xl font-bold">${card.attack}</div>
+                        <div class="text-sm text-gray-600">ATK</div>
+                    </div>
+                    <div class="bg-white rounded-lg border p-4 text-center">
+                        <div class="text-2xl font-bold">${card.defense}</div>
+                        <div class="text-sm text-gray-600">DEF</div>
+                    </div>
+                `;
+            } else {
+                statsContainer.innerHTML = '';
+            }
+            
+            // Set effect
+            document.getElementById('modalEffect').textContent = card.effect || card.description || 'No effect text available';
+            
+            // Set additional info
+            const infoContainer = document.getElementById('modalInfo');
+            infoContainer.innerHTML = `
+                ${card.cardNumber ? `<div class="text-sm text-gray-600"><strong>Card Number:</strong> ${card.cardNumber}</div>` : ''}
+                ${card.setCode ? `<div class="text-sm text-gray-600"><strong>Set Code:</strong> ${card.setCode}</div>` : ''}
+            `;
+            
+            // Set price
+            const priceContainer = document.getElementById('modalPrice');
+            if (card.price) {
+                document.getElementById('priceAmount').textContent = `$${card.price}`;
+                priceContainer.classList.remove('hidden');
+            } else {
+                priceContainer.classList.add('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('cardModal').classList.add('hidden');
+        }
+
+        function openYGOPRODeck() {
+            if (selectedCard) {
+                window.open(`https://ygoprodeck.com/card/${selectedCard.name.toLowerCase().replace(/ /g, '-')}/`, '_blank');
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab styles
+            const resultsTab = document.getElementById('resultsTab');
+            const popularTab = document.getElementById('popularTab');
+            const resultsGrid = document.getElementById('resultsGrid');
+            const popularGrid = document.getElementById('popularGrid');
+            
+            if (tab === 'results') {
+                resultsTab.className = 'py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600';
+                popularTab.className = 'py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+                resultsGrid.classList.remove('hidden');
+                popularGrid.classList.add('hidden');
+            } else {
+                resultsTab.className = 'py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+                popularTab.className = 'py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600';
+                resultsGrid.classList.add('hidden');
+                popularGrid.classList.remove('hidden');
+            }
+        }
+
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (show) {
+                spinner.classList.remove('hidden');
+            } else {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            
+            // Set background color based on type
+            if (type === 'error') {
+                toast.className = 'fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            } else if (type === 'success') {
+                toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            } else {
+                toast.className = 'fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            }
+            
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function refreshData() {
+            loadPopularCards();
+            showToast('Data refreshed', 'success');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('cardModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

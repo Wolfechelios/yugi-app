@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yu-Gi-Oh! API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .card { border: 1px solid #ccc; margin: 10px; padding: 10px; border-radius: 8px; }
+        .loading { color: blue; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Yu-Gi-Oh! API Test</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <button onclick="testSearch()">Test Card Search</button>
+    <button onclick="testArchetypes()">Test Archetypes</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'https://db.ygoprodeck.com/api/v7';
+
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Testing API connection...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/randomcard.php`);
+                if (response.ok) {
+                    const card = await response.json();
+                    results.innerHTML = `
+                        <div class="success">✅ API Connection Successful!</div>
+                        <div class="card">
+                            <h3>${card.name}</h3>
+                            <p>Type: ${card.type}</p>
+                            <p>ID: ${card.id}</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `<div class="error">❌ API Error: ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Connection Failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearch() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Searching for "Dark Magician"...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/cardinfo.php?name=Dark%20Magician`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    results.innerHTML = `<div class="error">❌ Search Error: ${data.error}</div>`;
+                } else {
+                    const cards = data.data || [];
+                    results.innerHTML = `
+                        <div class="success">✅ Found ${cards.length} cards!</div>
+                        ${cards.map(card => `
+                            <div class="card">
+                                <h3>${card.name}</h3>
+                                <p>Type: ${card.type}</p>
+                                <p>ATK: ${card.atk || 'N/A'} / DEF: ${card.def || 'N/A'}</p>
+                                <p>Attribute: ${card.attribute || 'N/A'}</p>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Search Failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testArchetypes() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Loading archetypes...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/archetypes.php`);
+                const archetypes = await response.json();
+                
+                results.innerHTML = `
+                    <div class="success">✅ Found ${archetypes.length} archetypes!</div>
+                    <p>First 10 archetypes:</p>
+                    <ul>
+                        ${archetypes.slice(0, 10).map(archetype => `<li>${archetype}</li>`).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Failed to load archetypes: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+import React from "react";
+
+export default function CardTile({ card, onClick }) {
+  if (!card) return null;
+
+  // Support multiple API formats
+  const image =
+    card.image_url ||
+    card.card_images?.[0]?.image_url ||
+    card.card_images?.[0]?.image_url_small ||
+    "/placeholder-card.png";
+
+  return (
+    <div
+      onClick={onClick}
+      className="p-3 rounded-lg bg-gray-900 hover:bg-gray-800 transition cursor-pointer border border-gray-700"
+    >
+      <img
+        src={image}
+        alt={card.name}
+        className="w-full h-auto rounded"
+      />
+
+      <div className="mt-2 text-white text-sm font-semibold">
+        {card.name}
+      </div>
+
+      {card.type && (

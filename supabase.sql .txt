@@ -1,0 +1,149 @@
+-- =========================================================
+-- DUELVAULT: YUGI-SCAN EDITION — OFFICIAL SUPABASE BACKEND
+-- =========================================================
+
+------------------------------------------------------------
+-- EXTENSIONS
+------------------------------------------------------------
+create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
+
+------------------------------------------------------------
+-- TABLE: scans
+------------------------------------------------------------
+create table if not exists scans (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  status text not null default 'pending' 
+    check (status in ('pending','processing','success','failed')),
+  ocr_text text,
+  detected_name text,
+  card_id integer,
+  image_path text,
+  result jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists scans_user_idx on scans(user_id);
+create index if not exists scans_status_idx on scans(status);
+create index if not exists scans_card_idx on scans(card_id);
+
+------------------------------------------------------------
+-- TABLE: cards (local YGO cache)
+------------------------------------------------------------
+create table if not exists cards (
+  id integer primary key,
+  name text,
+  type text,
+  attribute text,
+  atk int,
+  def int,
+  level int,
+  image_url text,
+  data jsonb,
+  updated_at timestamptz default now()
+);
+
+create index if not exists cards_name_idx 
+  on cards using gin (to_tsvector('english', name));
+
+------------------------------------------------------------
+-- TABLE: scan_results (history snapshots)
+------------------------------------------------------------
+create table if not exists scan_results (
+  id uuid primary key default gen_random_uuid(),
+  scan_id uuid not null references scans(id) on delete cascade,
+  result jsonb,
+  created_at timestamptz default now()
+);
+
+create index if not exists scan_results_scan_idx on scan_results(scan_id);
+
+------------------------------------------------------------
+-- STORAGE BUCKET
+------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('scan-images', 'scan-images', false)
+on conflict (id) do nothing;
+
+------------------------------------------------------------
+-- RLS POLICIES
+------------------------------------------------------------
+alter table scans enable row level security;
+alter table scan_results enable row level security;
+alter table cards enable row level security;
+
+-- scans
+create policy "user can select own scans" on scans
+for select using (auth.uid() = user_id);
+
+create policy "user can insert own scans" on scans
+for insert with check (auth.uid() = user_id);
+
+create policy "user can update own scans" on scans
+for update using (auth.uid() = user_id);
+
+-- scan_results
+create policy "user can view results of their scans" on scan_results
+for select using (
+  exists (
+    select 1 from scans 
+    where scans.id = scan_results.scan_id 
+      and scans.user_id = auth.uid()
+  )
+);
+
+create policy "user can insert scan results" on scan_results
+for insert with check (
+  exists (
+    select 1 from scans 
+    where scans.id = scan_results.scan_id 
+      and scans.user_id = auth.uid()
+  )
+);
+
+-- cards (public readable cache)
+create policy "anyone can read cards" on cards
+for select using (true);
+
+------------------------------------------------------------
+-- RPC: fetch_scans(uid)
+------------------------------------------------------------
+create or replace function fetch_scans(uid uuid)
+returns setof scans
+language sql stable as $$
+  select * 
+  from scans 
+  where user_id = uid
+  order by created_at desc;
+$$;
+
+------------------------------------------------------------
+-- RPC: fetch_card(cid)
+------------------------------------------------------------
+create or replace function fetch_card(cid int)
+returns cards
+language sql stable as $$
+  select * from cards where id = cid;
+$$;
+
+------------------------------------------------------------
+-- RPC: record_scan_result(scan_id, result)
+------------------------------------------------------------
+create or replace function record_scan_result(scan_id uuid, result jsonb)
+returns void
+language sql as $$
+  insert into scan_results (scan_id, result) values (scan_id, result);
+
+  update scans
+  set 
+    result = result,
+    status = 'success',
+    updated_at = now()
+  where id = scan_id;
+$$;
+
+------------------------------------------------------------
+-- DONE ✅
+------------------------------------------------------------

@@ -1,0 +1,250 @@
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): server.ts src/**/*[39m
+[33m[nodemon] watching extensions: ts,tsx,js,jsx[39m
+[32m[nodemon] starting `npx tsx server.ts`[39m
+> Ready on http://0.0.0.0:3000
+> Socket.IO server running at ws://0.0.0.0:3000/api/socketio
+> File upload limit: 500MB
+ ○ Compiling / ...
+ ✓ Compiled / in 1143ms (1121 modules)
+ GET / 200 in 1348ms
+ ⚠ Cross origin request detected from 0.0.0.0 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ⚠ ./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⨯ Error: supabaseUrl is required.
+    at eval (src/lib/db.ts:4:2)
+    at <unknown> (rsc)/./src/lib/db.ts (/Users/damacpro/Documents/Yugi-Scan-Patched/.next/server/app/api/init/route.js:54:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./src/app/api/init/route.ts:5:65)
+    at <unknown> (rsc)/./src/app/api/init/route.ts (/Users/damacpro/Documents/Yugi-Scan-Patched/.next/server/app/api/init/route.js:43:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_exec__ (.next/server/app/api/init/route.js:118:39)
+    at <unknown> (.next/server/app/api/init/route.js:119:131)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:163:21)
+    at <unknown> (.next/server/app/api/init/route.js:119:47)
+    at Object.<anonymous> (.next/server/app/api/init/route.js:122:3)
+  2 |
+  3 | export const supabase = createClient(
+> 4 |   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    |  ^
+  5 |   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  6 | );
+  7 | {
+  page: '/api/init'
+}
+ ⚠ ./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⚠ ./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⚠ ./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⚠ ./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ○ Compiling /_error ...
+ GET / 200 in 204ms
+ GET / 200 in 6ms
+ POST /api/init 500 in 807ms
+ ⚠ ./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⚠ ./src/app/api/collections/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/collections/route.ts
+
+./src/app/api/collections/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/collections/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⨯ Error: supabaseUrl is required.
+    at eval (src/lib/db.ts:4:2)
+    at <unknown> (rsc)/./src/lib/db.ts (/Users/damacpro/Documents/Yugi-Scan-Patched/.next/server/app/api/collections/route.js:54:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./src/app/api/collections/route.ts:7:65)
+    at <unknown> (rsc)/./src/app/api/collections/route.ts (/Users/damacpro/Documents/Yugi-Scan-Patched/.next/server/app/api/collections/route.js:43:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_exec__ (.next/server/app/api/collections/route.js:129:39)
+    at <unknown> (.next/server/app/api/collections/route.js:130:131)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:168:21)
+    at <unknown> (.next/server/app/api/collections/route.js:130:47)
+    at Object.<anonymous> (.next/server/app/api/collections/route.js:133:3)
+  2 |
+  3 | export const supabase = createClient(
+> 4 |   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    |  ^
+  5 |   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  6 | );
+  7 | {
+  page: '/api/collections'
+}
+ GET /api/collections 500 in 419ms
+ ⚠ ./src/app/api/collections/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/collections/route.ts
+
+./src/app/api/collections/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/collections/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+ ⚠ ./src/app/api/collections/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/collections/route.ts
+
+./src/app/api/collections/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/collections/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/init/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/init/route.ts
+
+./src/app/api/stats/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/stats/route.ts
+
+./src/app/api/stats/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/stats/route.ts
+
+./src/app/api/stats/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/stats/route.ts
+
+./src/app/api/stats/route.ts
+Attempted import error: 'db' is not exported from '@/lib/db' (imported as 'db').
+
+Import trace for requested module:
+./src/app/api/stats/route.ts
+ ⨯ Error: supabaseUrl is required.
+    at eval (src/lib/db.ts:4:2)
+    at <unknown> (rsc)/./src/lib/db.ts (/Users/damacpro/Documents/Yugi-Scan-Patched/.next/server/app/api/stats/route.js:54:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./src/app/api/stats/route.ts:6:65)
+    at <unknown> (rsc)/./src/app/api/stats/route.ts (/Users/damacpro/Documents/Yugi-Scan-Patched/.next/server/app/api/stats/route.js:43:1)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_require__ (.next/server/webpack-runtime.js:33:42)
+    at __webpack_exec__ (.next/server/app/api/stats/route.js:129:39)
+    at <unknown> (.next/server/app/api/stats/route.js:130:131)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:168:21)
+    at <unknown> (.next/server/app/api/stats/route.js:130:47)
+    at Object.<anonymous> (.next/server/app/api/stats/route.js:133:3)
+  2 |
+  3 | export const supabase = createClient(
+> 4 |   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    |  ^
+  5 |   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  6 | );
+  7 | {
+  page: '/api/stats'
+}
+ GET /api/stats 500 in 403ms
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `npx tsx server.ts`[39m
+> Ready on http://0.0.0.0:3000
+> Socket.IO server running at ws://0.0.0.0:3000/api/socketio
+> File upload limit: 500MB

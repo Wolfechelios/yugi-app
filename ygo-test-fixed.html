@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGO API Test - Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .card { border: 1px solid #ccc; margin: 10px; padding: 10px; border-radius: 8px; }
+        .loading { color: blue; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Yu-Gi-Oh! API Test - Fixed Version</h1>
+    <button onclick="testPopularCards()">Test Popular Cards</button>
+    <button onclick="testSearch()">Test Card Search</button>
+    <button onclick="testArchetypes()">Test Archetypes</button>
+    <button onclick="testRandom()">Test Random Card</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        async function testPopularCards() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Testing popular cards...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/ygo-cards?sort=new&num=3&offset=0`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    results.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                } else {
+                    results.innerHTML = `
+                        <div class="success">✅ Found ${data.data.length} popular cards!</div>
+                        ${data.data.map(card => `
+                            <div class="card">
+                                <h3>${card.name}</h3>
+                                <p>Type: ${card.humanReadableCardType || card.type}</p>
+                                <p>ATK: ${card.atk || 'N/A'} / DEF: ${card.def || 'N/A'}</p>
+                                <p>Attribute: ${card.attribute || 'N/A'}</p>
+                                <p>Archetype: ${card.archetype || 'N/A'}</p>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearch() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Searching for "Dark Magician"...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/ygo-cards?fname=Dark&num=3&offset=0`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    results.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                } else {
+                    results.innerHTML = `
+                        <div class="success">✅ Found ${data.data.length} cards with "Dark" in name!</div>
+                        ${data.data.map(card => `
+                            <div class="card">
+                                <h3>${card.name}</h3>
+                                <p>Type: ${card.humanReadableCardType || card.type}</p>
+                                <p>ATK: ${card.atk || 'N/A'} / DEF: ${card.def || 'N/A'}</p>
+                                <p>Attribute: ${card.attribute || 'N/A'}</p>
+                                <p>Archetype: ${card.archetype || 'N/A'}</p>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testArchetypes() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Loading archetypes...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/ygo-archetypes`);
+                const archetypes = await response.json();
+                
+                results.innerHTML = `
+                    <div class="success">✅ Found ${archetypes.length} archetypes!</div>
+                    <p>First 10 archetypes:</p>
+                    <ul>
+                        ${archetypes.slice(0, 10).map(archetype => `<li>${archetype.archetype_name}</li>`).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Failed: ${error.message}</div>`;
+            }
+        }
+
+        async function testRandom() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Getting random card...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/ygo-random`);
+                const data = await response.json();
+                
+                if (data.data && data.data.length > 0) {
+                    const card = data.data[0];
+                    results.innerHTML = `
+                        <div class="success">✅ Random card: ${card.name}</div>
+                        <div class="card">
+                            <h3>${card.name}</h3>
+                            <p>Type: ${card.humanReadableCardType || card.type}</p>
+                            <p>ATK: ${card.atk || 'N/A'} / DEF: ${card.def || 'N/A'}</p>
+                            <p>Attribute: ${card.attribute || 'N/A'}</p>
+                            <p>Archetype: ${card.archetype || 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `<div class="error">❌ No random card found</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Failed: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
