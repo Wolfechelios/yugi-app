@@ -1,6 +1,6 @@
+import { supabase } from "@/lib/db"
+import { someFn } from "@/lib/ygo-api"
 
-import { supabase } from "@/src/lib/db"
-import { searchYGOCard, saveOfficialYGOCards } from "@/src/lib/ygo-api"
 
 export async function processScan(scan) {
   try {
