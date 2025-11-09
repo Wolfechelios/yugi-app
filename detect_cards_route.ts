@@ -1,5 +1,5 @@
 
-import { supabase } from "@/src/lib/db"
+import { supabase } from "@/lib/db"
 import { uploadScanImage } from "@/src/lib/fileUpload"
 import { v4 as uuidv4 } from "uuid"
 

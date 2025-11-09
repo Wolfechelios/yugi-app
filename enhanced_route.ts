@@ -1,5 +1,5 @@
 
-import { supabase } from "@/src/lib/db"
+import { supabase } from "@/lib/db"
 
 export async function POST(req) {
   try {
