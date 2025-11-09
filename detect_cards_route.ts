@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/db"
-import { uploadScanImage } from "@/src/lib/fileUpload"
+import { uploadScanImage } from "@/lib/fileUpload"
 import { v4 as uuidv4 } from "uuid"
 
 export async function POST(req) {
