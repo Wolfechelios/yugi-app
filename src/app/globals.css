@@ -1,7 +1,2 @@
-/* Minimal Tailwind v4-compatible globals. Do NOT paste compiled Tailwind here. */
 @import "tailwindcss";
-
-/* Optional: your global tweaks */
-:root {
-  /* custom vars go here */
-}
+:root {}

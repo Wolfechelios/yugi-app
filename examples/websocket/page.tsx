@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import { useEffect, useState, useRef } from 'react';
+import Pusher from 'pusher-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,109 +11,74 @@ type Message = {
   text: string;
   senderId: string;
   timestamp: string;
-}
+};
 
 export default function SocketDemo() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [socket, setSocket] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const pusherRef = useRef<Pusher | null>(null);
 
   useEffect(() => {
-    const socketInstance = io({
-      path: '/api/socketio',
+    const key = process.env.NEXT_PUBLIC_PUSHER_KEY!;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER!;
+    const p = new Pusher(key, { cluster });
+
+    const channel = p.subscribe('chat');
+    channel.bind('pusher:subscription_succeeded', () => setIsConnected(true));
+    channel.bind('message', (data: Message) => {
+      setMessages(prev => [...prev, data]);
     });
 
-    setSocket(socketInstance);
-
-    socketInstance.on('connect', () => {
-      setIsConnected(true);
-    });
-
-    socketInstance.on('disconnect', () => {
-      setIsConnected(false);
-    });
-
-    socketInstance.on('message', (msg: Message) => {
-      setMessages(prev => [...prev, msg]);
-    });
-
+    pusherRef.current = p;
     return () => {
-      socketInstance.disconnect();
+      channel.unbind_all();
+      channel.unsubscribe();
+      p.disconnect();
+      pusherRef.current = null;
     };
   }, []);
 
-  const sendMessage = () => {
-    if (socket && inputMessage.trim()) {
-      setMessages(prev => [...prev, {
-        text: inputMessage.trim(),
-        senderId: socket.id || 'user',
-        timestamp: new Date().toISOString()
-      }]);
-      socket.emit('message', {
-        text: inputMessage.trim(),
-        senderId: socket.id || 'user',
-        timestamp: new Date().toISOString()
-      });
-      setInputMessage('');
-    }
-  };
+  async function sendMessage() {
+    const text = inputMessage.trim();
+    if (!text) return;
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      sendMessage();
-    }
-  };
+    await fetch('/api/message', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        senderId: 'web-' + Math.random().toString(36).slice(2, 8),
+      }),
+    });
+
+    setInputMessage('');
+  }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
+    <div className="p-4 max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            WebSocket Demo
-            <span className={`text-sm px-2 py-1 rounded ${isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-          </CardTitle>
+          <CardTitle>Realtime Chat (Pusher Channels)</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <ScrollArea className="h-80 w-full border rounded-md p-4">
-            <div className="space-y-2">
-              {messages.length === 0 ? (
-                <p className="text-gray-500 text-center">No messages yet</p>
-              ) : (
-                messages.map((msg, index) => (
-                  <div key={index} className="border-b pb-2 last:border-b-0">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-700">
-                          {msg.senderId}
-                        </p>
-                        <p className="text-gray-900">{msg.text}</p>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {new Date(msg.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+        <CardContent>
+          <ScrollArea style={{ maxHeight: 320 }} className="border rounded p-2 mb-3">
+            {messages.map((m, i) => (
+              <div key={i} className="text-sm mb-1">
+                <span className="font-mono opacity-70">{m.timestamp} </span>
+                <span className="font-semibold">{m.senderId}: </span>
+                <span>{m.text}</span>
+              </div>
+            ))}
           </ScrollArea>
-
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              disabled={!isConnected}
+              placeholder="Type a message"
               className="flex-1"
             />
-            <Button 
-              onClick={sendMessage} 
-              disabled={!isConnected || !inputMessage.trim()}
-            >
+            <Button onClick={sendMessage} disabled={!isConnected || !inputMessage.trim()}>
               Send
             </Button>
           </div>

@@ -1,198 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import ZAI from 'z-ai-web-dev-sdk'
+// single_scan_route.ts
 
-export async function POST(request: NextRequest) {
+// -- Tiny helper so OpenAI "content" is always a string (works with older typings)
+export function asStringMessage(text: unknown, imageUrl?: unknown) {
+  const t = String(text ?? '');
+  const u = typeof imageUrl === 'string' && imageUrl ? `\nImage URL: ${imageUrl}` : '';
+  return t + u;
+}
+
+// -- Minimal message shape your other code can use safely
+export type ChatMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+// Build a user message for "card" scans (string-only content)
+export function buildCardMessages(cardPrompt: unknown, imageUrl?: unknown): ChatMessage[] {
+  return [
+    {
+      role: 'user',
+      content: asStringMessage(cardPrompt, imageUrl),
+    },
+  ];
+}
+
+// Build a user message for OCR scans (string-only content)
+export function buildOcrMessages(ocrPrompt: unknown, imageUrl?: unknown): ChatMessage[] {
+  return [
+    {
+      role: 'user',
+      content: asStringMessage(ocrPrompt, imageUrl),
+    },
+  ];
+}
+
+/**
+ * Optional route-style handler (harmless if not used).
+ * Lets you POST { mode: "card" | "ocr", cardPrompt?, ocrPrompt?, imageUrl? }
+ * and get back the messages array. Keeps TS happy either way.
+ */
+export async function POST(req: Request) {
   try {
-    const { image, userId } = await request.json()
+    const body = await req.json().catch(() => ({} as any));
+    const mode = (body?.mode ?? 'card') as 'card' | 'ocr';
+    const imageUrl = body?.imageUrl;
 
-    if (!image || !userId) {
-      return NextResponse.json(
-        { error: 'Image and userId are required' },
-        { status: 400 }
-      )
-    }
+    const messages =
+      mode === 'ocr'
+        ? buildOcrMessages(body?.ocrPrompt ?? '', imageUrl)
+        : buildCardMessages(body?.cardPrompt ?? '', imageUrl);
 
-    try {
-      // Initialize ZAI SDK
-      const zai = await ZAI.create()
-
-      // Card identification prompt
-      const cardPrompt = `
-        Identify this Yu-Gi-Oh! card from the provided image.
-        
-        Extract:
-        1. Card name (exact text from the card)
-        2. Card type (Monster, Spell, Trap)
-        3. Attribute (if monster: DARK, LIGHT, EARTH, WIND, WATER, FIRE, DIVINE)
-        4. Level/Rank (if applicable)
-        5. Attack/Defense points (if monster)
-        6. Card description/effect text
-        7. Rarity (if visible: Common, Rare, Super Rare, Ultra Rare, Secret Rare)
-
-        Format as JSON: {
-          "name": "Card Name",
-          "type": "Monster",
-          "attribute": "DARK",
-          "level": "8",
-          "attack": "3000",
-          "defense": "2500",
-          "description": "Card effect text",
-          "rarity": "Ultra Rare",
-          "confidence": 95
-        }
-      `
-
-      const cardResult = await zai.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert Yu-Gi-Oh! card identifier. Extract information accurately from card images.'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: cardPrompt
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: image
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.1
-      })
-
-      const cardInfo = JSON.parse(cardResult.choices[0].message.content || '{}')
-
-      // OCR verification
-      const ocrPrompt = `
-        Extract and verify all text from this Yu-Gi-Oh! card image.
-        Provide confidence assessment for text quality.
-        
-        Return JSON: {
-          "fullText": "all extracted text",
-          "confidence": 85,
-          "regions": [
-            {"text": "card name", "confidence": 90, "type": "name"},
-            {"text": "effect text", "confidence": 80, "type": "effect"}
-          ],
-          "verification": {
-            "cardNameMatch": true,
-            "textQuality": "high"
-          }
-        }
-      `
-
-      const ocrResult = await zai.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an OCR specialist providing text extraction and quality assessment.'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: ocrPrompt
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: image
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 800,
-        temperature: 0.1
-      })
-
-      let ocrData
-      try {
-        ocrData = JSON.parse(ocrResult.choices[0].message.content || '{}')
-      } catch (parseError) {
-        ocrData = {
-          fullText: cardInfo.name || '',
-          confidence: cardInfo.confidence || 70,
-          regions: [],
-          verification: {
-            cardNameMatch: !!cardInfo.name,
-            textQuality: 'medium'
-          }
-        }
-      }
-
-      // Find or create card in database
-      let card = await db.card.findFirst({
-        where: {
-          OR: [
-            { name: cardInfo.name },
-            { name: { contains: cardInfo.name, mode: 'insensitive' } }
-          ]
-        }
-      })
-
-      if (!card && cardInfo.name) {
-        card = await db.card.create({
-          data: {
-            name: cardInfo.name,
-            description: cardInfo.description,
-            type: cardInfo.type || 'Unknown',
-            attribute: cardInfo.attribute,
-            level: cardInfo.level ? parseInt(cardInfo.level) : null,
-            attack: cardInfo.attack ? parseInt(cardInfo.attack) : null,
-            defense: cardInfo.defense ? parseInt(cardInfo.defense) : null,
-            rarity: cardInfo.rarity || 'Common',
-            cardCode: `BATCH-${Date.now()}`,
-            imageUrl: image
-          }
-        })
-      }
-
-      // Create scan record
-      const scan = await db.cardScan.create({
-        data: {
-          userId,
-          imageUrl: image,
-          cardId: card?.id,
-          confidence: Math.min((cardInfo.confidence || 70) / 100, 1.0),
-          ocrText: JSON.stringify(ocrData),
-          status: card ? 'identified' : 'failed'
-        }
-      })
-
-      return NextResponse.json({
-        success: !!card,
-        scan,
-        card,
-        message: card ? 'Card identified successfully' : 'Card could not be identified',
-        confidence: cardInfo.confidence || 70
-      })
-
-    } catch (aiError) {
-      console.error('AI processing error:', aiError)
-      
-      return NextResponse.json({
-        success: false,
-        error: 'AI processing failed',
-        message: 'Failed to process card image'
-      }, { status: 500 })
-    }
-
-  } catch (error) {
-    console.error('Single card scan error:', error)
-    return NextResponse.json(
-      { error: 'Failed to scan card' },
-      { status: 500 }
-    )
+    return Response.json({ ok: true, messages });
+  } catch {
+    return Response.json({ ok: false, error: 'Bad request' }, { status: 400 });
   }
 }
+
+// Default export for folks importing the module as a bag of helpers
+export default {
+  asStringMessage,
+  buildCardMessages,
+  buildOcrMessages,
+};

@@ -1,4 +1,4 @@
-// Supabase client wrapper for Next.js
+// Minimal Supabase client for Next.js App Router
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -9,6 +9,6 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
-// Backward-compat export for code importing { db } from "@/lib/db"
+// Back-compat for code importing { db } from '@/lib/db'
 export const db = supabase;
 export default supabase;
